@@ -35,4 +35,11 @@ class MAMEDataset(Dataset):
     
     def get_labels_distribution(self):
         labels = self.frame.iloc[:, 1]
-        return Counter(labels)
+        return dict(Counter(labels))
+    
+    def get_images(self):
+        for idx in range(len(self.frame)):
+            img_name = os.path.join(self.root_dir,
+                                    self.frame.iloc[idx, 0])
+            image = cv2.imread(img_name)
+            yield image
