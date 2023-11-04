@@ -110,8 +110,6 @@ def train(epoch, num_epoch, epoch_iters, train_loader, loss_fn, optimizer, model
         losses = loss_fn(outputs, labels)
         loss = losses.mean()
         acc = torch.mean((pred_labels == labels).float())
-        if epoch == 7:
-            pass
 
         losses.backward()
         optimizer.step()
@@ -132,3 +130,4 @@ def train(epoch, num_epoch, epoch_iters, train_loader, loss_fn, optimizer, model
                                                             ave_loss.average(), ave_acc.average())
             print(msg)
 
+    return ave_loss.average(), ave_acc.average()

@@ -1,16 +1,23 @@
 import os
+import json
 import torch
+import gc
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 from utils import validate, train
 from MAMEDataset import MAMEDataset
+from plotters.plotters import *
 
 from models.CNN import Net
+
+gc.collect()
+torch.cuda.empty_cache()
 
 EPOCHS = 50
 BATCH_SIZE = 128
 NUM_CLASSES = 29
 OUT_PATH = r'./output/'
+os.environ["PYTORCH_HIP_ALLOC_CONF"] = "garbage_collection_threshold:0.7,max_split_size_mb:128"
 
 if not os.path.exists(OUT_PATH):
     os.makedirs(OUT_PATH)
@@ -42,9 +49,11 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.001, eps=0.1, amsgrad=True
 epoch_iters = int(train_dataset.__len__() / BATCH_SIZE)
 
 best_loss = 999999999
+
+history = {'train_loss': [], 'train_acc': [], 'val_loss': [], 'val_acc': []}
 for epoch in range(EPOCHS):
 
-    train(epoch, EPOCHS, epoch_iters, train_loader, criterion, optimizer, model)
+    train_loss, train_acc = train(epoch, EPOCHS, epoch_iters, train_loader, criterion, optimizer, model)
 
     mean_loss, val_acc = validate(val_loader, criterion, model)
 
@@ -65,4 +74,18 @@ for epoch in range(EPOCHS):
     msg = 'VALIDATION METRICS: Loss: {:.3f} Accuracy: {:.3f}'.format(mean_loss, val_acc)
     print(msg)
 
+    history['train_loss'].append(train_loss)
+    history['train_acc'].append(train_acc)
+    history['val_loss'].append(mean_loss)
+    history['val_acc'].append(val_acc)
+
+    if epoch > 0:
+        plot_loss(history['train_loss'], history['val_loss'], OUT_PATH)
+        plot_acc(history['train_acc'], history['val_acc'], OUT_PATH)
+
+    with open(os.path.join(OUT_PATH, 'history.json'), 'w') as outfile:
+        json.dump(history, outfile, indent=4)
+
+
 torch.save(model.state_dict(), os.path.join(OUT_PATH, 'final_state.pt'))
+
