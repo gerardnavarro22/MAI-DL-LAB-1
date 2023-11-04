@@ -2,11 +2,11 @@ import os
 import pandas as pd
 import shutil
 
-DATASET_PATH = fr'datasets/raw/mame'
-OUT_PATH = fr'datasets/processed/mame'
+DATASET_PATH = fr'./datasets/raw/mame/'
+OUT_PATH = fr'./datasets/processed/mame/'
 
 if __name__ == '__main__':
-    labels = pd.read_csv(os.path.join(DATASET_PATH, 'MAMe_toy_dataset.csv'), header=0, index_col=0)
+    labels = pd.read_csv(os.path.join(DATASET_PATH, 'MAMe_dataset.csv'), header=0, index_col=0)
     labels_translation = pd.read_csv(os.path.join(DATASET_PATH, 'MAMe_labels.csv'), header=None)
     
     labels_to_num_dict = {}

@@ -1,28 +1,31 @@
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class Net(nn.Module):
 
-    def __init__(self):
+    def __init__(self, num_classes):
         super(Net, self).__init__()
-        # 1 input image channel, 6 output channels, 5x5 square convolution
-        # kernel
-        self.conv1 = nn.Conv2d(1, 6, 5)
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        # an affine operation: y = Wx + b
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)  # 5*5 from image dimension
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
+
+        self.relu = nn.ReLU()
+        self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=5, padding='same')
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding='same')
+        self.conv3 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding='same')
+        self.max_pooling = nn.MaxPool2d(kernel_size=2)
+        self.fc1 = nn.Linear(in_features=131072, out_features=512)
+        self.fc2 = nn.Linear(in_features=512, out_features=num_classes)
 
     def forward(self, x):
-        # Max pooling over a (2, 2) window
-        x = F.max_pool2d(F.relu(self.conv1(x)), (2, 2))
-        # If the size is a square, you can specify with a single number
-        x = F.max_pool2d(F.relu(self.conv2(x)), 2)
-        x = torch.flatten(x, 1) # flatten all dimensions except the batch dimension
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
+        out = self.conv1(x)
+        out = self.relu(out)
+        out = self.max_pooling(out)
+        out = self.conv2(out)
+        out = self.relu(out)
+        out = self.max_pooling(out)
+        out = self.conv3(out)
+        out = self.relu(out)
+        out = self.max_pooling(out)
+        out = out.view(out.size(0), -1)
+        out = self.fc1(out)
+        out = self.fc2(out)
+
+        return out

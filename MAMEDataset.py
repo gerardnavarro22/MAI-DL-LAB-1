@@ -9,10 +9,11 @@ from collections import Counter
 class MAMEDataset(Dataset):
     """MAME dataset."""
 
-    def __init__(self, labels_csv, images_dir, transform=None, header=None):
+    def __init__(self, labels_csv, images_dir, transform=None, target_transform=None, header=None):
         self.frame = pd.read_csv(labels_csv, header=header)
         self.root_dir = images_dir
         self.transform = transform
+        self.target_transform = target_transform
 
     def __len__(self):
         return len(self.frame)
@@ -26,12 +27,14 @@ class MAMEDataset(Dataset):
         image = cv2.imread(img_name)
         label = self.frame.iloc[idx, 1]
         label = np.array([label], dtype=int)
-        sample = {'image': image, 'label': label}
 
         if self.transform:
-            sample = self.transform(sample)
+            image = self.transform(image)
 
-        return sample
+        if self.target_transform:
+            label = self.transform(label)
+
+        return image, label
     
     def get_labels_distribution(self):
         labels = self.frame.iloc[:, 1]
