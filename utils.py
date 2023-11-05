@@ -45,6 +45,7 @@ def test(test_loader, model: torch.nn.Module):
     ave_acc = AverageMeter()
     true_labels = []
     pred_labels = []
+    n_batches = len(test_loader)
     with torch.no_grad():
         for idx, batch in enumerate(test_loader, 0):
             images, labels = batch
@@ -54,11 +55,14 @@ def test(test_loader, model: torch.nn.Module):
 
             outputs = model(images)
             current_pred_labels = torch.argmax(outputs, dim=1)
-            pred_labels.extend(list(current_pred_labels.item()))
-            true_labels.extend(list(labels.item()))
+            acc = torch.mean((current_pred_labels == labels).float())
+            pred_labels.extend(current_pred_labels.tolist())
+            true_labels.extend(labels.tolist())
 
-            acc = torch.mean((pred_labels == labels).float())
             ave_acc.update(acc.item())
+            if idx % 5 == 0:
+                msg = 'Iter:[{}/{}], Acc:{:.6f}'.format(idx, n_batches, ave_acc.average())
+                print(msg)
 
     return ave_acc.average(), true_labels, pred_labels
 
@@ -81,12 +85,18 @@ def validate(val_loader, loss_fn, model):
             losses = loss_fn(outputs, labels)
             loss = losses.mean()
             ave_loss.update(loss.item())
-            auroc = auroc_metric(outputs, labels)
+            if idx == 0:
+                all_outputs = outputs
+                all_labels = labels
+            else:
+                all_outputs = torch.cat((all_outputs, outputs))
+                all_labels = torch.cat((all_labels, labels))
 
             acc = torch.mean((pred_labels == labels).float())
             ave_acc.update(acc.item())
-            ave_auroc.update(auroc.item())
 
+    auroc = auroc_metric(all_outputs, all_labels)
+    ave_auroc.update(auroc.item())
     return ave_loss.average(), ave_auroc.average(), ave_acc.average()
 
 

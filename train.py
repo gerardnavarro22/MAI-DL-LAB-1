@@ -78,5 +78,7 @@ def train(Net: Type[torch.nn.Module], epochs: int, batch_size: int, num_classes:
 
     torch.save(model.state_dict(), os.path.join(out_path, 'final_state.pt'))
 
+    model.cpu()
+    del model
     gc.collect()
     torch.cuda.empty_cache()

@@ -4,7 +4,7 @@ from models.CNN import *
 import warnings
 warnings.filterwarnings('ignore')
 
-models = [FCNN1Layers, FCNN2Layers, FCNN3Layers, CNN1Conv, CNN2Conv, CNN3Conv]
+models = [CNN2Conv, CNN3Conv]
 
 EPOCHS = 20
 BATCH_SIZE = 128

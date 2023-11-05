@@ -1,7 +1,8 @@
 from matplotlib import pyplot as plt
 import os
-from torchmetrics.classification import MulticlassConfusionMatrix
-
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+import numpy as np
 
 
 def plot_loss(train_loss, val_loss, path):
@@ -40,10 +41,13 @@ def plot_auroc(train_auroc, val_auroc, path):
     plt.close()
 
 
-def plot_confusion_matrix(preds, target, path):
-    metric = MulticlassConfusionMatrix(num_classes=29)
-    metric.update(preds, target)
-    fig, ax = metric.plot()
-    fig.savefig(os.path.join(path, 'confusion_matrix.png'))
+def plot_confusion_matrix(preds, target, target_names, path):
+    cf_matrix = confusion_matrix(np.array(preds), np.array(target), normalize='true')
+    cf_matrix = np.around(cf_matrix, 2)
+    fig, ax = plt.subplots(figsize=(13, 13))
+    sns.heatmap(cf_matrix, annot=True, cmap='PuRd', cbar=False, square=True, xticklabels=target_names,
+                yticklabels=target_names)
+    fig.tight_layout()
+    fig.savefig(os.path.join(path, 'confusion_matrix.png'), dpi=300)
     plt.clf()
     plt.close()
