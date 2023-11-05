@@ -24,3 +24,15 @@ def plot_acc(train_acc, val_acc, path):
     plt.savefig(os.path.join(path, 'accuracy.png'))
     plt.clf()
     plt.close()
+
+
+def plot_auroc(train_auroc, val_auroc, path):
+    plt.title('Training and validation AUROC')
+    plt.plot(train_auroc, label='train')
+    plt.plot(val_auroc, label='val')
+    plt.ylabel('AUROC')
+    plt.xlabel('epoch')
+    plt.legend(loc='best')
+    plt.savefig(os.path.join(path, 'auroc.png'))
+    plt.clf()
+    plt.close()

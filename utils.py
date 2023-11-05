@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import time
+from torchmetrics.classification import MulticlassAUROC
 
 
 class AverageMeter(object):
@@ -69,6 +70,8 @@ def validate(testloader, loss_fn, model):
     model.eval()
     ave_loss = AverageMeter()
     ave_acc = AverageMeter()
+    ave_auroc = AverageMeter()
+    auroc_metric = MulticlassAUROC(num_classes=29, average="macro", thresholds=None)
     with torch.no_grad():
         for idx, batch in enumerate(testloader):
             image, labels = batch
@@ -81,20 +84,24 @@ def validate(testloader, loss_fn, model):
             losses = loss_fn(outputs, labels)
             loss = losses.mean()
             ave_loss.update(loss.item())
+            auroc = auroc_metric(outputs, labels)
 
             acc = torch.mean((pred_labels == labels).float())
             ave_acc.update(acc.item())
+            ave_auroc.update(auroc.item())
 
-    return ave_loss.average(), ave_acc.average()
+    return ave_loss.average(), ave_auroc.average(), ave_acc.average()
 
 
-def train(epoch, num_epoch, epoch_iters, train_loader, loss_fn, optimizer, model):
+def train_one_epoch(epoch, num_epoch, epoch_iters, train_loader, loss_fn, optimizer, model):
     # Training
     model.train()
 
     batch_time = AverageMeter()
     ave_loss = AverageMeter()
     ave_acc = AverageMeter()
+    ave_auroc = AverageMeter()
+    auroc_metric = MulticlassAUROC(num_classes=29, average="macro", thresholds=None)
     tic = time.time()
 
     for i_iter, batch in enumerate(train_loader, 0):
@@ -111,6 +118,8 @@ def train(epoch, num_epoch, epoch_iters, train_loader, loss_fn, optimizer, model
         loss = losses.mean()
         acc = torch.mean((pred_labels == labels).float())
 
+        auroc = auroc_metric(outputs, labels)
+
         losses.backward()
         optimizer.step()
 
@@ -121,13 +130,15 @@ def train(epoch, num_epoch, epoch_iters, train_loader, loss_fn, optimizer, model
         # update average loss
         ave_loss.update(loss.item())
         ave_acc.update(acc.item())
+        ave_auroc.update(auroc.item())
 
         if i_iter % 5 == 0:
             msg = 'Epoch: [{}/{}] Iter:[{}/{}], Time: {:.2f}, ' \
-                  'lr: {}, Loss: {:.6f}, Acc:{:.6f}'.format(epoch+1, num_epoch, i_iter, epoch_iters,
-                                                            batch_time.average(),
-                                                            [x['lr'] for x in optimizer.param_groups],
-                                                            ave_loss.average(), ave_acc.average())
+                  'lr: {}, Loss: {:.6f}, AUROC: {:.6f}, Acc:{:.6f}'.format(epoch + 1, num_epoch, i_iter, epoch_iters,
+                                                                           batch_time.average(),
+                                                                           [x['lr'] for x in optimizer.param_groups],
+                                                                           ave_loss.average(), ave_auroc.average(),
+                                                                           ave_acc.average())
             print(msg)
 
-    return ave_loss.average(), ave_acc.average()
+    return ave_loss.average(), ave_auroc.average(), ave_acc.average()
