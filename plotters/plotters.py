@@ -1,5 +1,7 @@
 from matplotlib import pyplot as plt
 import os
+from torchmetrics.classification import MulticlassConfusionMatrix
+
 
 
 def plot_loss(train_loss, val_loss, path):
@@ -34,5 +36,14 @@ def plot_auroc(train_auroc, val_auroc, path):
     plt.xlabel('epoch')
     plt.legend(loc='best')
     plt.savefig(os.path.join(path, 'auroc.png'))
+    plt.clf()
+    plt.close()
+
+
+def plot_confusion_matrix(preds, target, path):
+    metric = MulticlassConfusionMatrix(num_classes=29)
+    metric.update(preds, target)
+    fig, ax = metric.plot()
+    fig.savefig(os.path.join(path, 'confusion_matrix.png'))
     plt.clf()
     plt.close()

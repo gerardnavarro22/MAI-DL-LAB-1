@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import time
-from torchmetrics.classification import MulticlassAUROC
+from torchmetrics.classification import MulticlassAUROC, MulticlassConfusionMatrix
 
 
 class AverageMeter(object):
@@ -40,46 +40,43 @@ class AverageMeter(object):
         return self.avg
 
 
-def get_confusion_matrix(label, pred, size, num_class, ignore=-1):
-    """
-    Calcute the confusion matrix by given label and pred
-    """
-    output = pred.cpu().numpy().transpose(0, 2, 3, 1)
-    seg_pred = np.asarray(np.argmax(output, axis=3), dtype=np.uint8)
-    seg_gt = np.asarray(
-        label.cpu().numpy()[:, :size[-2], :size[-1]], dtype=int)
+def test(test_loader, model: torch.nn.Module):
+    model.eval()
+    ave_acc = AverageMeter()
+    true_labels = []
+    pred_labels = []
+    with torch.no_grad():
+        for idx, batch in enumerate(test_loader, 0):
+            images, labels = batch
+            images = images.cuda()
+            labels = labels.cuda()
+            labels = labels.squeeze()
 
-    ignore_index = seg_gt != ignore
-    seg_gt = seg_gt[ignore_index]
-    seg_pred = seg_pred[ignore_index]
+            outputs = model(images)
+            current_pred_labels = torch.argmax(outputs, dim=1)
+            pred_labels.extend(list(current_pred_labels.item()))
+            true_labels.extend(list(labels.item()))
 
-    index = (seg_gt * num_class + seg_pred).astype('int32')
-    label_count = np.bincount(index)
-    confusion_matrix = np.zeros((num_class, num_class))
+            acc = torch.mean((pred_labels == labels).float())
+            ave_acc.update(acc.item())
 
-    for i_label in range(num_class):
-        for i_pred in range(num_class):
-            cur_index = i_label * num_class + i_pred
-            if cur_index < len(label_count):
-                confusion_matrix[i_label,
-                i_pred] = label_count[cur_index]
-    return confusion_matrix
+    return ave_acc.average(), true_labels, pred_labels
 
 
-def validate(testloader, loss_fn, model):
+def validate(val_loader, loss_fn, model):
     model.eval()
     ave_loss = AverageMeter()
     ave_acc = AverageMeter()
     ave_auroc = AverageMeter()
     auroc_metric = MulticlassAUROC(num_classes=29, average="macro", thresholds=None)
     with torch.no_grad():
-        for idx, batch in enumerate(testloader):
-            image, labels = batch
-            image = image.cuda()
+        for idx, batch in enumerate(val_loader, 0):
+            images, labels = batch
+            images = images.cuda()
             labels = labels.cuda()
             labels = labels.squeeze()
 
-            outputs = model(image)
+            outputs = model(images)
             pred_labels = torch.argmax(outputs, dim=1)
             losses = loss_fn(outputs, labels)
             loss = losses.mean()
