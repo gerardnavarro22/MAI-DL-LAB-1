@@ -1,12 +1,13 @@
 import os
 import torch
 import gc
+import json
 import pandas as pd
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 from MAMEDataset import MAMEDataset
 from utils import test
-from plotters.plotters import plot_confusion_matrix
+from plotters.plotters import plot_confusion_matrix, plot_classification_report
 
 from models.FCNN import FCNN1Layers, FCNN2Layers, FCNN3Layers
 from models.CNN import CNN1Conv, CNN2Conv, CNN3Conv
@@ -81,10 +82,16 @@ for trained_model in sorted(os.listdir(TRAINED_MODELS_PATH)):
 
     accuracy, true_labels, pred_labels = test(test_loader, model)
 
+    metrics = {'accuracy': accuracy}
+
     true_labels = [num_to_labels_dict[number] for number in true_labels]
     pred_labels = [num_to_labels_dict[number] for number in pred_labels]
 
     plot_confusion_matrix(pred_labels, true_labels, target_names, path)
+    plot_classification_report(pred_labels, true_labels, target_names, path)
+
+    with open(os.path.join(path, 'metrics.json'), 'w') as outfile:
+        json.dump(metrics, outfile, indent=4)
 
     model.cpu()
     del model
