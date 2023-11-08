@@ -21,8 +21,6 @@ def train(Net: Type[torch.nn.Module], epochs: int, batch_size: int, num_classes:
 
     train_dataset = MAMEDataset(fr'./datasets/processed/mame/train/labels.csv',
                                 fr'./datasets/processed/mame/train', header=None, transform=transform)
-    test_dataset = MAMEDataset(fr'./datasets/processed/mame/test/labels.csv',
-                               fr'./datasets/processed/mame/test', header=None, transform=transform)
     val_dataset = MAMEDataset(fr'./datasets/processed/mame/val/labels.csv',
                               fr'./datasets/processed/mame/val', header=None, transform=transform)
 

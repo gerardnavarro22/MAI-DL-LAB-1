@@ -1,0 +1,35 @@
+                        precision    recall  f1-score   support
+
+    Albumen photograph       0.78      0.76      0.77       700
+                Bronze       0.47      0.34      0.40       700
+               Ceramic       0.68      0.49      0.57       700
+                  Clay       0.39      0.60      0.47       313
+             Engraving       0.45      0.43      0.44       700
+               Etching       0.39      0.36      0.37       700
+               Faience       0.68      0.61      0.64       700
+                 Glass       0.55      0.47      0.51       700
+                  Gold       0.62      0.64      0.63       700
+              Graphite       0.24      0.70      0.36       188
+Hand-colored engraving       0.67      0.88      0.76       328
+  Hand-colored etching       0.67      0.69      0.68       584
+                  Iron       0.32      0.63      0.42       265
+                 Ivory       0.40      0.32      0.35       572
+             Limestone       0.44      0.36      0.39       700
+            Lithograph       0.50      0.21      0.30       700
+                Marble       0.27      0.41      0.32       257
+         Oil on canvas       0.58      0.73      0.65       700
+     Pen and brown ink       0.33      0.51      0.40       286
+      Polychromed wood       0.39      0.29      0.33       375
+             Porcelain       0.51      0.56      0.53       700
+ Silk and metal thread       0.15      0.42      0.22        95
+                Silver       0.47      0.47      0.47       700
+                 Steel       0.36      0.70      0.48       133
+                  Wood       0.39      0.49      0.43       700
+        Wood engraving       0.48      0.37      0.42       361
+             Woodblock       0.51      0.40      0.45       700
+               Woodcut       0.68      0.57      0.62       700
+         Woven fabric        0.47      0.31      0.38       700
+
+              accuracy                           0.49     15657
+             macro avg       0.48      0.51      0.47     15657
+          weighted avg       0.51      0.49      0.49     15657

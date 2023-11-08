@@ -10,13 +10,13 @@ from utils import test
 from plotters.plotters import plot_confusion_matrix, plot_classification_report
 
 from models.FCNN import FCNN1Layers, FCNN2Layers, FCNN3Layers
-from models.CNN import CNN1Conv, CNN2Conv, CNN3Conv
+from models.CNN import CNN1Conv, CNN2Conv, CNN3Conv, CNN3ConvNoBatchNorm, ComplexCNN
 
 DATASET_PATH = fr'datasets/raw/mame'
 TRAINED_MODELS_PATH = r'./output/'
 SAVE_PATH = r'./output_test/'
 NUM_CLASSES = 29
-BATCH_SIZE = 512
+BATCH_SIZE = 128
 
 if not os.path.exists(SAVE_PATH):
     os.makedirs(SAVE_PATH)
@@ -32,8 +32,8 @@ for _, label in labels_translation.iterrows():
     num_to_labels_dict[label[0]] = label[1]
 
 transform = transforms.Compose(
-        [transforms.ToTensor(),
-         transforms.Normalize([0.53116883, 0.57740572, 0.6089572], [0.26368123, 0.2632309, 0.26533898])])
+    [transforms.ToTensor(),
+     transforms.Normalize([0.53116883, 0.57740572, 0.6089572], [0.26368123, 0.2632309, 0.26533898])])
 
 test_dataset = MAMEDataset(fr'./datasets/processed/mame/test/labels.csv',
                            fr'./datasets/processed/mame/test', header=None, transform=transform)
@@ -63,22 +63,38 @@ for trained_model in sorted(os.listdir(TRAINED_MODELS_PATH)):
         p_conv = float(trained_model.split('drop')[-1].split('conv')[-1])
         model = CNN2Conv(NUM_CLASSES, p, p_conv)
         model.load_state_dict(torch.load(os.path.join(path, 'best.pt')))
-    elif 'CNN3Conv'.lower() in trained_model.lower():
+    elif 'CNN3Conv'.lower() in trained_model.lower() and 'CNN3ConvNoBatchNorm'.lower() not in trained_model.lower():
         p = float(trained_model.split('drop')[1][:-1])
         p_conv = float(trained_model.split('drop')[-1].split('conv')[-1])
         model = CNN3Conv(NUM_CLASSES, p, p_conv)
+        model.load_state_dict(torch.load(os.path.join(path, 'best.pt')))
+    elif 'CNN3ConvNoBatchNorm'.lower() in trained_model.lower():
+        p = float(trained_model.split('drop')[1][:-1])
+        p_conv = float(trained_model.split('drop')[-1].split('conv')[-1])
+        model = CNN3ConvNoBatchNorm(NUM_CLASSES, p, p_conv)
+        model.load_state_dict(torch.load(os.path.join(path, 'best.pt')))
+    elif 'ComplexCNN'.lower() in trained_model.lower():
+        p = float(trained_model.split('drop')[1][:-1])
+        p_conv = float(trained_model.split('drop')[-1].split('conv')[-1])
+        model = ComplexCNN(NUM_CLASSES, p, p_conv)
         model.load_state_dict(torch.load(os.path.join(path, 'best.pt')))
     else:
         print(f'{trained_model} NOT IMPLEMENTED')
         continue
 
-    print(f'Evaluating {trained_model}')
-
-    model = model.cuda()
-
     path = os.path.join(SAVE_PATH, trained_model)
     if not os.path.exists(path):
         os.makedirs(path)
+    else:
+        model.cpu()
+        del model
+        gc.collect()
+        torch.cuda.empty_cache()
+        continue
+
+    print(f'Evaluating {trained_model}')
+
+    model = model.cuda()
 
     accuracy, true_labels, pred_labels = test(test_loader, model)
 
@@ -97,4 +113,3 @@ for trained_model in sorted(os.listdir(TRAINED_MODELS_PATH)):
     del model
     gc.collect()
     torch.cuda.empty_cache()
-
