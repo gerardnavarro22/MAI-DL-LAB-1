@@ -2,9 +2,11 @@ import os
 import torch
 import pandas as pd
 import cv2
+from PIL import Image
 import numpy as np
 from torch.utils.data import Dataset
 from collections import Counter
+
 
 class MAMEDataset(Dataset):
     """MAME dataset."""
@@ -24,7 +26,8 @@ class MAMEDataset(Dataset):
 
         img_name = os.path.join(self.root_dir,
                                 self.frame.iloc[idx, 0])
-        image = cv2.imread(img_name)
+        # image = cv2.imread(img_name)
+        image = Image.open(img_name).convert('RGB')
         label = self.frame.iloc[idx, 1]
         label = np.array([label], dtype=int)
 
@@ -35,11 +38,11 @@ class MAMEDataset(Dataset):
             label = self.transform(label)
 
         return image, label
-    
+
     def get_labels_distribution(self):
         labels = self.frame.iloc[:, 1]
         return dict(Counter(labels))
-    
+
     def get_images(self):
         for idx in range(len(self.frame)):
             img_name = os.path.join(self.root_dir,

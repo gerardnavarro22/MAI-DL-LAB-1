@@ -12,11 +12,11 @@ from plotters.plotters import plot_confusion_matrix, plot_classification_report
 from models.FCNN import FCNN1Layers, FCNN2Layers, FCNN3Layers
 from models.CNN import CNN1Conv, CNN2Conv, CNN3Conv, CNN3ConvNoBatchNorm, ComplexCNN
 
-DATASET_PATH = fr'datasets/raw/mame'
-TRAINED_MODELS_PATH = r'./output/'
-SAVE_PATH = r'./output_test/'
+DATASET_PATH = fr'../datasets/raw/mame'
+TRAINED_MODELS_PATH = r'../output/'
+SAVE_PATH = r'../output_test/'
 NUM_CLASSES = 29
-BATCH_SIZE = 128
+BATCH_SIZE = 256
 
 if not os.path.exists(SAVE_PATH):
     os.makedirs(SAVE_PATH)
@@ -36,11 +36,13 @@ transform = transforms.Compose(
      transforms.Normalize([0.53116883, 0.57740572, 0.6089572], [0.26368123, 0.2632309, 0.26533898])])
 
 test_dataset = MAMEDataset(fr'./datasets/processed/mame/test/labels.csv',
-                           fr'./datasets/processed/mame/test', header=None, transform=transform)
+                           fr'../datasets/processed/mame/test', header=None, transform=transform)
 
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 for trained_model in sorted(os.listdir(TRAINED_MODELS_PATH)):
+    if trained_model != 'ComplexCNN_drop0.2_dropconv0.2':
+        continue
     path = os.path.join(TRAINED_MODELS_PATH, trained_model)
     if 'FCNN1Layers'.lower() in trained_model.lower():
         model = FCNN1Layers(NUM_CLASSES)
@@ -96,7 +98,7 @@ for trained_model in sorted(os.listdir(TRAINED_MODELS_PATH)):
 
     model = model.cuda()
 
-    accuracy, true_labels, pred_labels = test(test_loader, model)
+    accuracy, true_labels, pred_labels, auroc = test(test_loader, model)
 
     metrics = {'accuracy': accuracy}
 
@@ -105,6 +107,8 @@ for trained_model in sorted(os.listdir(TRAINED_MODELS_PATH)):
 
     plot_confusion_matrix(pred_labels, true_labels, target_names, path)
     plot_classification_report(pred_labels, true_labels, target_names, path)
+
+    metrics['auroc'] = auroc
 
     with open(os.path.join(path, 'metrics.json'), 'w') as outfile:
         json.dump(metrics, outfile, indent=4)

@@ -10,10 +10,10 @@ from torchview import draw_graph
 from models.FCNN import FCNN1Layers, FCNN2Layers, FCNN3Layers
 from models.CNN import CNN1Conv, CNN2Conv, CNN3Conv, CNN3ConvNoBatchNorm, ComplexCNN
 
-DATASET_PATH = fr'datasets/raw/mame'
-TRAINED_MODELS_PATH = r'./output/'
-TESTED_MODELS_PATH = r'./output_test/'
-SAVE_PATH = r'./output_test_plots/'
+DATASET_PATH = fr'../datasets/raw/mame'
+TRAINED_MODELS_PATH = r'../output/'
+TESTED_MODELS_PATH = r'../output_test/'
+SAVE_PATH = r'../output_test_plots/'
 NUM_CLASSES = 29
 BATCH_SIZE = 128
 
